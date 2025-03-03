@@ -2,17 +2,21 @@
   "name": "bookishelf-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "NODE_ENV=development node server.js",
+    "prod": "NODE_ENV=production node server.js",
+    "serve": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@fastify/cors": "^7.0.0",
-    "axios": "^1.7.9",
-    "express": "^4.21.2",
-    "fastify": "^5.2.1"
+    "fastify": "^3.29.5",
+    "fastify-cors": "^6.0.3",
+    "undici": "^7.4.0",
+    "dotenv": "^10.0.0"
   }
 }
