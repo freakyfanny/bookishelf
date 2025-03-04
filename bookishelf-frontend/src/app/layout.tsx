@@ -1,6 +1,7 @@
 import Providers from "./providers";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Header from "./components/Header";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,7 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <Header />
         <Providers>{children}</Providers>
+        <footer className="flex row-start-3 gap-1">
+          This is a footer
+        </footer>
       </body>
     </html>
   );
