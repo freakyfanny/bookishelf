@@ -1,16 +1,12 @@
 import Image from "next/image";
+// import Books from "../components/Books";
 
 export default function Home() {
   return (
     <div>
       <h1>Favourites</h1>
       <main>
-        <div className="grid grid-cols-2 gap-4">
-          <div>hej</div>
-          <div>hej</div>
-          <div>hej</div>
-          <div>hej</div>
-          </div>
+        {/* <Books></Books> */}
       </main>
     </div>
   );
