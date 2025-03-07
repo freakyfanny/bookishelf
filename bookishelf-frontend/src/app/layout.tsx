@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Header from "./components/Header";
 import Providers from "./providers";
 import "./globals.css";
+import React from 'react';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +17,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+interface RootLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (query: string) => {
@@ -26,9 +31,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Header onSearch={handleSearch} />
-        <Providers>{children}</Providers>
-        <footer className="flex row-start-3 gap-1 p-6">
+        <Providers>
+          <Header/>
+          {children}
+        </Providers>
+        <footer className="flex row-start-3 gap-1 p-5">
           This is a footer
         </footer>
       </body>

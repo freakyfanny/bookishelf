@@ -1,22 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import Link from "next/link";
-    
-interface HeaderProps {
-  onSearch: (searchQuery: string) => void;
-}
+import { useSearchQuery } from "../providers"; // Import the hook to get searchQuery
 
-const Header: React.FC<HeaderProps> = ({ onSearch }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const Header: React.FC = () => {
+  const { searchQuery, setSearchQuery } = useSearchQuery(); // Get the search query and the setter
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleSearchSubmit = () => {
-    // Trigger the search with the current query when the user submits
-    onSearch(searchQuery);
+    setSearchQuery(e.target.value); // Update the search query
   };
 
   return (
@@ -42,14 +33,9 @@ const Header: React.FC<HeaderProps> = ({ onSearch }) => {
                 type="text" 
                 value={searchQuery}
                 onChange={handleSearchChange}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()} // Submit on Enter key press
                 placeholder="Type to search..." 
                 className="w-full px-4 py-3 focus:outline-none bg-transparent"
               />
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 group-focus-within:text-sky-500 mr-2 transition-colors">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
             </div>
           </div>
         </div>
