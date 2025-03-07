@@ -17,8 +17,8 @@ interface Book {
     topWork: string;
     birthDate: string;
     deathDate: string;
+    publishDate: number;
     link: string;
-    rating: number;
 }
 
 const fetchBooks = async (searchQuery: string) => {
@@ -61,7 +61,7 @@ const Books: React.FC<BooksProps> = ({ searchQuery }) => {
                         author={book.author}
                         imageUrl={book.imageUrl}
                         category={book.category}
-                        rating={book.rating}
+                        publishDate={book.publishDate}
                     /> : <AuthorCard
                         key={index}
                         name={book.name}
