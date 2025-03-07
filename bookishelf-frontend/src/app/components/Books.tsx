@@ -8,6 +8,7 @@ interface Book {
     type: string;
     key: string;
     title: string;
+    author: string;
     name: string;
     description: string;
     imageUrl: string;
@@ -17,6 +18,7 @@ interface Book {
     birthDate: string;
     deathDate: string;
     link: string;
+    rating: number;
 }
 
 const fetchBooks = async (searchQuery: string) => {
@@ -50,16 +52,16 @@ const Books: React.FC<BooksProps> = ({ searchQuery }) => {
     const fetchedBooks: Book[] = data; // ändra om det behövs här
     console.log('data', data); 
     return (
-        <div className="container flex mt-5">
-            <div className="md:flex">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-10 gap-y-10 pt-10 relative">
                 {fetchedBooks.map((book, index) =>
                     (book.type = "book") ? <BookCard
                         key={index}
                         title={book.title}
                         description={book.description}
+                        author={book.author}
                         imageUrl={book.imageUrl}
                         category={book.category}
-                        link={book.link}
+                        rating={book.rating}
                     /> : <AuthorCard
                         key={index}
                         name={book.name}
@@ -68,7 +70,6 @@ const Books: React.FC<BooksProps> = ({ searchQuery }) => {
                         imageUrl={book.imageUrl} birthDate={book.birthDate} deathDate={book.deathDate} />
                 )}
             </div>
-        </div>
     );
 };
 
