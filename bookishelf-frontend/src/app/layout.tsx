@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import Providers from "./providers";
 import "./globals.css";
 import React from 'react';
@@ -31,13 +32,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Providers>
-          <Header/>
-          {children}
-        </Providers>
-        <footer className="flex row-start-3 gap-1 p-5">
-          This is a footer
-        </footer>
+        <div className='min-h-screen'>
+          <Providers>
+            <Header />
+            {children}
+          </Providers>
+          <Footer />
+        </div>
       </body>
     </html>
   );

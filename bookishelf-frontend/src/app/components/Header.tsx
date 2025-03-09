@@ -11,7 +11,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="w-full fixed top-0 text-white p-0">
+    <header className="w-full fixed top-0 z-10 text-white p-0">
       <nav className="flex items-center justify-between flex-wrap bg-slate-800 p-6">
         <div className="flex items-center flex-shrink-0 text-white mr-6">
           <span className="font-bold text-xl">Bookishelf</span>

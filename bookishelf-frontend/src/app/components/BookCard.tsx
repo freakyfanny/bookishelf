@@ -12,7 +12,7 @@ const BookCard: React.FC<BookCardProps> = ({ title, author, description, imageUr
         <div className="mt-5 bg-white shadow-lg rounded-md flex flex-col cursor-pointer px-5 pb-5 text-body-light">
             <div className="flex relative">
                 <img
-                    className="w-32 h-50 -mt-5 rounded shadow-lg border-b border-gray-300 object-cover transition-all duration-300"
+                    className="w-30 h-48 -mt-5 rounded shadow-lg border-b border-gray-300 object-cover transition-all duration-300"
                     src={imageUrl}
                     alt={title}
                     title={title}

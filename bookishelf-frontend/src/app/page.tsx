@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 export default function BooksPage() {
   return (
     <div>
-      <main className="p-5">
-        <h1>Böcker</h1>
+      <main className="px-5 py-10 mb-20">
+        <h1 className="text-2xl font-bold">Result</h1>
         <Books />
       </main>
     </div>
