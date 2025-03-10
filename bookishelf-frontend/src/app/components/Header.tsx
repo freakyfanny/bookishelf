@@ -1,23 +1,33 @@
 'use client';
 
 import Link from "next/link";
-import { useSearchQuery } from "../providers"; 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchQuery } from '../providers'; // If you need the context for other purposes
 
 const Header: React.FC = () => {
-  const { searchQuery, setSearchQuery } = useSearchQuery();
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [inputValue, setInputValue] = useState('');
+  const { setSearchQuery } = useSearchQuery(); // Keep this if you need to update the context value
 
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query); // Update the search query in context
+    },
+    [setSearchQuery]
+  );
+
+  // Debounce effect
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setDebouncedQuery(searchQuery); 
+      debouncedSearch(inputValue);
     }, 1000);
 
-    return () => clearTimeout(timeoutId); 
-  }, [searchQuery]);
-  
+    return () => clearTimeout(timeoutId); // Clear the timeout on input change
+  }, [inputValue, debouncedSearch]);
+
+  // Handle input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value); 
+    setInputValue(e.target.value);
   };
 
   return (
@@ -41,7 +51,7 @@ const Header: React.FC = () => {
             <div className="flex items-center border-b-2 border-slate-200 group-focus-within:border-sky-500 transition-colors">
               <input 
                 type="text" 
-                value={searchQuery}
+                value={inputValue}
                 onChange={handleSearchChange} 
                 placeholder="Type to search..." 
                 className="w-full px-4 py-3 focus:outline-none bg-transparent"
