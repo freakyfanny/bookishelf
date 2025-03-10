@@ -1,13 +1,23 @@
 'use client';
 
 import Link from "next/link";
-import { useSearchQuery } from "../providers"; // Import the hook to get searchQuery
+import { useSearchQuery } from "../providers"; 
+import { useState, useEffect } from "react";
 
 const Header: React.FC = () => {
-  const { searchQuery, setSearchQuery } = useSearchQuery(); // Get the search query and the setter
+  const { searchQuery, setSearchQuery } = useSearchQuery();
+  const [debouncedQuery, setDebouncedQuery] = useState("");
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedQuery(searchQuery); 
+    }, 1000);
+
+    return () => clearTimeout(timeoutId); 
+  }, [searchQuery]);
+  
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value); // Update the search query
+    setSearchQuery(e.target.value); 
   };
 
   return (
@@ -32,7 +42,7 @@ const Header: React.FC = () => {
               <input 
                 type="text" 
                 value={searchQuery}
-                onChange={handleSearchChange}
+                onChange={handleSearchChange} 
                 placeholder="Type to search..." 
                 className="w-full px-4 py-3 focus:outline-none bg-transparent"
               />

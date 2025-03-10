@@ -22,7 +22,7 @@ const BookCard: React.FC<BookCardProps> = ({ title, author, description, imageUr
                         <div className="text-lg font-bold">
                             {title}
                         </div>
-                        <div className="whitespace-nowrap overflow-hidden text-ellipsis font-normal">by {author}</div>
+                        <div className="text-balance font-normal">by {author}</div>
                         <div className="whitespace-nowrap overflow-hidden text-ellipsis font-normal">{publishDate}</div>
                         <div className="uppercase tracking-wide text-sm text-teal-600 font-bold">{category}</div>
 

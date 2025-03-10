@@ -23,12 +23,6 @@ interface RootLayoutProps {
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
