@@ -6,7 +6,6 @@ interface AuthorCardProps {
 }
 
 const BookCard: React.FC<AuthorCardProps> = ({ name, bio, birthDate, deathDate }) => {
-    console.log("name", name);
     return (
         <div className="flex-1 text-black text-center bg-white px-5 py-5 m-2 rounded">
             <div className="lg:flex lg:items-center">

@@ -3,10 +3,9 @@
 import { useQuery } from '@tanstack/react-query';
 import BookCard from './BookCard';
 import AuthorCard from './AuthorCard';
-import { Author, Book } from '../../../../shared/types';
+import { useSearchQuery } from "../src/app/providers";
 
 const fetchBooks = async (searchQuery: string) => {
-    console.log("searchQuery ", searchQuery);
     const res = await fetch(`/api/search?searchParam=${searchQuery}`);
     if (!res.ok) {
         throw new Error('Error fetching books');
@@ -14,11 +13,8 @@ const fetchBooks = async (searchQuery: string) => {
     return res.json();
 };
 
-import { useSearchQuery } from "../providers"; // Import the hook to access search query
-
 const Books = () => {
-    const { searchQuery } = useSearchQuery(); // Access searchQuery from context
-    console.log("searchQuery is", searchQuery)
+    const { searchQuery } = useSearchQuery();
     const { data, error, isLoading, isError } = useQuery({
         queryKey: ['books', searchQuery],
         queryFn: () => fetchBooks(searchQuery),
@@ -38,10 +34,8 @@ const Books = () => {
         return <p className="text-3xl font-semibold mt-4 mb-4 py-2">An error occured: {error instanceof Error ? error.message : 'Unknown error'}</p>;
     }
 
-    console.log('data', data);
-
     const fetchedResult = Array.isArray(data) ? data : [];
-    console.log('data', data);
+
     return (
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-10 pt-10 relative">
             {fetchedResult.map((object, index) =>

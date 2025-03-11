@@ -33,7 +33,7 @@ interface QueryWithSearchParamLimitOffset {
 }
 
 // Fetch Books
-fastifyServer.get("/books", async (req : FastifyRequest<{Querystring: QueryWithIdType}>, reply : FastifyReply) => {
+fastifyServer.get("/books", async (req: FastifyRequest<{ Querystring: QueryWithIdType }>, reply: FastifyReply) => {
   try {
     const result: Book | undefined = await getBook(req.query.id as string, req.query.type as string);
     reply.send(result);
@@ -44,7 +44,7 @@ fastifyServer.get("/books", async (req : FastifyRequest<{Querystring: QueryWithI
 });
 
 // Fetch Book Details
-fastifyServer.get("/bookDetails", async (req : FastifyRequest<{Querystring: QueryWithKey}>, reply : FastifyReply) => {
+fastifyServer.get("/bookDetails", async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
   try {
     const result: Book | undefined = await getBookDetails(req.query.key as string);
     reply.send(result);
@@ -55,7 +55,7 @@ fastifyServer.get("/bookDetails", async (req : FastifyRequest<{Querystring: Quer
 });
 
 // Fetch Author Details
-fastifyServer.get("/authorDetails", async (req : FastifyRequest<{Querystring: QueryWithKey}>, reply : FastifyReply) => {
+fastifyServer.get("/authorDetails", async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
   try {
     const authorId = req.query.key as string;
     const result: Author = await fetch(`${url}/authors/${authorId}.json`).then((res) => res.json());
@@ -68,7 +68,7 @@ fastifyServer.get("/authorDetails", async (req : FastifyRequest<{Querystring: Qu
 });
 
 // Search Books and Authors
-fastifyServer.get("/search", async (req : FastifyRequest<{Querystring: QueryWithSearchParamLimitOffset & {limit?: string, offset?: string}}>, reply : FastifyReply) => {
+fastifyServer.get("/search", async (req: FastifyRequest<{ Querystring: QueryWithSearchParamLimitOffset & { limit?: string, offset?: string } }>, reply: FastifyReply) => {
   try {
     const result = await search(req.query.searchParam as string, req.query.limit, req.query.offset);
     reply.send(result);

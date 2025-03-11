@@ -2,32 +2,24 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchQuery } from '../providers'; // If you need the context for other purposes
+import { useSearchQuery } from '../src/app/providers';
+import { useDebounce } from "../hooks/useDebounce";
 
 const Header: React.FC = () => {
-  const [inputValue, setInputValue] = useState('');
-  const { setSearchQuery } = useSearchQuery(); // Keep this if you need to update the context value
+  const [inputValue, setInputValue] = useState("");
+  const { setSearchQuery } = useSearchQuery(); 
+  const debouncedValue = useDebounce(inputValue, 500);
 
-  // Debounced search function
-  const debouncedSearch = useCallback(
-    (query: string) => {
-      setSearchQuery(query); // Update the search query in context
-    },
-    [setSearchQuery]
-  );
-
-  // Debounce effect
+  // Effect runs when debounce completes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      debouncedSearch(inputValue);
-    }, 1000);
-
-    return () => clearTimeout(timeoutId); // Clear the timeout on input change
-  }, [inputValue, debouncedSearch]);
+    if (debouncedValue) {
+      setSearchQuery(debouncedValue);
+    }
+  }, [debouncedValue]);
 
   // Handle input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+    setInputValue(e.target.value); 
   };
 
   return (
@@ -46,14 +38,14 @@ const Header: React.FC = () => {
               Favourites
             </Link>
           </div>
-          
+
           <div className="max-w-md mx-auto group">
             <div className="flex items-center border-b-2 border-slate-200 group-focus-within:border-sky-500 transition-colors">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={inputValue}
-                onChange={handleSearchChange} 
-                placeholder="Type to search..." 
+                onChange={handleSearchChange}
+                placeholder="Type to search..."
                 className="w-full px-4 py-3 focus:outline-none bg-transparent"
               />
             </div>
