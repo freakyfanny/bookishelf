@@ -33,50 +33,113 @@ interface QueryWithSearchParamLimitOffset {
 }
 
 // Fetch Books
-fastifyServer.get("/books", async (req: FastifyRequest<{ Querystring: QueryWithIdType }>, reply: FastifyReply) => {
-  try {
-    const result: Book | undefined = await getBook(req.query.id as string, req.query.type as string);
-    reply.send(result);
-  } catch (err) {
-    console.error(`Error in /books route: ${err}`);
-    reply.status(500).send({ error: "Internal Server Error" });
+fastifyServer.get(
+  "/books",
+  async (req: FastifyRequest<{ Querystring: QueryWithIdType }>, reply: FastifyReply) => {
+    try {
+      const { id, type } = req.query;
+
+      if (!id || !type) {
+        return reply.status(400).send({ error: "Query parameters 'id' and 'type' are required." });
+      }
+
+      const result: Book | undefined = await getBook(id, type);
+
+      if (!result) {
+        return reply.status(404).send({ error: "Book not found." });
+      }
+
+      reply.send(result);
+    } catch (err) {
+      console.error(`Error in /books route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
   }
-});
+);
+
 
 // Fetch Book Details
-fastifyServer.get("/bookDetails", async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
-  try {
-    const result: Book | undefined = await getBookDetails(req.query.key as string);
-    reply.send(result);
-  } catch (err) {
-    console.error(`Error in /bookDetails route: ${err}`);
-    reply.status(500).send({ error: "Internal Server Error" });
+fastifyServer.get(
+  "/bookDetails",
+  async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
+    try {
+      const { key } = req.query;
+
+      if (!key) {
+        return reply.status(400).send({ error: "Query parameter 'key' is required." });
+      }
+
+      const result: Book | undefined = await getBookDetails(key);
+
+      if (!result) {
+        return reply.status(404).send({ error: "Book details not found." });
+      }
+
+      reply.send(result);
+    } catch (err) {
+      console.error(`Error in /bookDetails route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
   }
-});
+);
 
 // Fetch Author Details
-fastifyServer.get("/authorDetails", async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
-  try {
-    const authorId = req.query.key as string;
-    const result: Author = await fetch(`${url}/authors/${authorId}.json`).then((res) => res.json());
+fastifyServer.get(
+  "/authorDetails",
+  async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
+    try {
+      const { key: authorId } = req.query;
 
-    reply.send(result);
-  } catch (err) {
-    console.error(`Error in /authorDetails route: ${err}`);
-    reply.status(500).send({ error: "Internal Server Error" });
-  }
-});
+      if (!authorId) {
+        return reply.status(400).send({ error: "Query parameter 'key' is required." });
+      }
 
-// Search Books and Authors
-fastifyServer.get("/search", async (req: FastifyRequest<{ Querystring: QueryWithSearchParamLimitOffset & { limit?: string, offset?: string } }>, reply: FastifyReply) => {
-  try {
-    const result = await search(req.query.searchParam as string, req.query.limit, req.query.offset);
-    reply.send(result);
-  } catch (err) {
-    console.error(`Error in /search route: ${err}`);
-    reply.status(500).send({ error: "Internal Server Error" });
+      const response = await fetch(`${url}/authors/${authorId}.json`);
+      
+      if (!response.ok) {
+        return reply.status(response.status).send({ error: "Failed to fetch author details." });
+      }
+
+      const result: Author = await response.json();
+
+      reply.send(result);
+    } catch (err) {
+      console.error(`Error in /authorDetails route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
   }
-});
+);
+
+// Fetch Author Details
+fastifyServer.get(
+  "/authorDetails",
+  async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
+    try {
+      const { key: authorId } = req.query;
+
+      if (!authorId) {
+        return reply.status(400).send({ error: "Query parameter 'key' is required." });
+      }
+
+      const response = await fetch(`${url}/authors/${authorId}.json`);
+
+      if (!response.ok) {
+        return reply.status(response.status).send({ error: `Failed to fetch author details. ${response.statusText}` });
+      }
+
+      const result: Author = await response.json();
+
+      if (!result) {
+        return reply.status(404).send({ error: "Author details not found." });
+      }
+
+      reply.send(result);
+    } catch (err) {
+      console.error(`Error in /authorDetails route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
+  }
+);
 
 // Search Function
 const search = async (query: string, limit?: string, offset?: string) => {
@@ -141,7 +204,6 @@ const getBook = async (id: string, type: string): Promise<Book | undefined> => {
     throw err;
   }
 };
-
 
 // Fetch Book Details
 const getBookDetails = async (key: string): Promise<Book | undefined> => {
