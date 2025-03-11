@@ -142,7 +142,6 @@ fastifyServer.get(
       }
 
       const result = await fetchSearchResults(searchParam, limit, offset, filter);
-
       if (!result || result.length === 0) {
         return reply.status(404).send({ error: `No results found for the given search query and filter: '${filter}'` });
       }

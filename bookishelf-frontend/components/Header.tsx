@@ -7,19 +7,29 @@ import { useDebounce } from "../hooks/useDebounce";
 
 const Header: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
-  const { setSearchQuery, searchFilter, setSearchFilter } = useSearchQuery();
+  const [searchFilterValue, setSearchFilterValue] = useState("");
+  const { setSearchQuery, setSearchFilter } = useSearchQuery();
   const debouncedValue = useDebounce(inputValue, 500);
+  const debouncedFilterValue = useDebounce(searchFilterValue, 500);
 
-  // Effect runs when debounce completes
   useEffect(() => {
     if (debouncedValue) {
       setSearchQuery(debouncedValue);
     }
-  }, [debouncedValue]);
+  }, [debouncedValue, setSearchQuery]);
 
-  // Handle input change
+  useEffect(() => {
+    if (debouncedFilterValue) {
+      setSearchFilter(debouncedFilterValue);
+    }
+  }, [debouncedFilterValue, setSearchFilter]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
+  };
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSearchFilterValue(e.target.value);
   };
 
   return (
@@ -39,10 +49,9 @@ const Header: React.FC = () => {
             </Link>
           </div>
 
-
           <select
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
+            value={searchFilterValue}
+            onChange={handleFilterChange}
             className="bg-sky-300 text-black mx-4 px-4 py-2 rounded-md border border-gray-500 focus:border-sky-900"
           >
             <option value="books" > Books </option>

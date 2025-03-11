@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     }
 
     const data = await serverResponse.json();
-
+    
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching from Server:', error);
