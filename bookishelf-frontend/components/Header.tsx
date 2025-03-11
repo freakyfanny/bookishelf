@@ -1,13 +1,13 @@
 'use client';
 
 import Link from "next/link";
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchQuery } from '../src/app/providers';
 import { useDebounce } from "../hooks/useDebounce";
 
 const Header: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
-  const { setSearchQuery } = useSearchQuery(); 
+  const { setSearchQuery, searchFilter, setSearchFilter } = useSearchQuery();
   const debouncedValue = useDebounce(inputValue, 500);
 
   // Effect runs when debounce completes
@@ -19,28 +19,38 @@ const Header: React.FC = () => {
 
   // Handle input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value); 
+    setInputValue(e.target.value);
   };
 
   return (
-    <header className="w-full fixed top-0 z-10 text-white p-0">
-      <nav className="flex items-center justify-between flex-wrap bg-slate-800 p-6">
-        <div className="flex items-center flex-shrink-0 text-white mr-6">
-          <span className="font-bold text-xl">Bookishelf</span>
+    <header className="w-full fixed top-0 z-10 text-white p-0" >
+      <nav className="flex items-center justify-between flex-wrap bg-slate-800 p-6" >
+        <div className="flex items-center flex-shrink-0 text-white mr-6" >
+          <span className="font-bold text-xl" > Bookishelf </span>
         </div>
 
-        <div className="w-full block flex-grow sm:flex sm:items-center sm:w-auto">
-          <div className="text-sm sm:flex-grow">
-            <Link href="/" className="block mt-4 sm:inline-block sm:mt-0 text-sky-300 hover:text-white mr-4">
+        < div className="w-full block flex-grow sm:flex sm:items-center sm:w-auto" >
+          <div className="text-sm sm:flex-grow" >
+            <Link href="/" className="block mt-4 sm:inline-block sm:mt-0 text-sky-300 hover:text-white mr-4" >
               Bookishelf
             </Link>
-            <Link href="/favourites" className="block mt-4 sm:inline-block sm:mt-0 text-sky-300 hover:text-white mr-4">
+            <Link href="/favourites" className="block mt-4 sm:inline-block sm:mt-0 text-sky-300 hover:text-white mr-4" >
               Favourites
             </Link>
           </div>
 
-          <div className="max-w-md mx-auto group">
-            <div className="flex items-center border-b-2 border-slate-200 group-focus-within:border-sky-500 transition-colors">
+
+          <select
+            value={searchFilter}
+            onChange={(e) => setSearchFilter(e.target.value)}
+            className="bg-slate-700 text-white px-4 py-2 rounded-md border border-gray-500 focus:border-sky-400"
+          >
+            <option value="books" > Books </option>
+            <option value="authors" > Authors </option>
+          </select>
+
+          <div className="max-w-md mx-auto group" >
+            <div className="flex items-center border-b-2 border-slate-200 group-focus-within:border-sky-500 transition-colors" >
               <input
                 type="text"
                 value={inputValue}
@@ -53,7 +63,7 @@ const Header: React.FC = () => {
         </div>
       </nav>
     </header>
-  );
+  )
 };
 
 export default Header;

@@ -26,10 +26,11 @@ interface QueryWithKey {
   key: string;
 }
 
-interface QueryWithSearchParamLimitOffset {
+interface QueryWithSearchParamLimitOffsetFilter {
   searchParam: string;
   limit: string;
   offset: string;
+  filter: string;
 }
 
 // Fetch Books
@@ -43,13 +44,13 @@ fastifyServer.get(
         return reply.status(400).send({ error: "Query parameters 'id' and 'type' are required." });
       }
 
-      const result: Book | undefined = await getBook(id, type);
+      const result: Book | undefined = await fetchBook(id, type);
 
       if (!result) {
         return reply.status(404).send({ error: "Book not found." });
       }
 
-      reply.send(result);
+      return reply.send(result);
     } catch (err) {
       console.error(`Error in /books route: ${err}`);
       reply.status(500).send({ error: "Internal Server Error" });
@@ -69,42 +70,15 @@ fastifyServer.get(
         return reply.status(400).send({ error: "Query parameter 'key' is required." });
       }
 
-      const result: Book | undefined = await getBookDetails(key);
+      const result: Book | undefined = await fetchBookDetails(key);
 
       if (!result) {
         return reply.status(404).send({ error: "Book details not found." });
       }
 
-      reply.send(result);
+      return reply.send(result);
     } catch (err) {
       console.error(`Error in /bookDetails route: ${err}`);
-      reply.status(500).send({ error: "Internal Server Error" });
-    }
-  }
-);
-
-// Fetch Author Details
-fastifyServer.get(
-  "/authorDetails",
-  async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
-    try {
-      const { key: authorId } = req.query;
-
-      if (!authorId) {
-        return reply.status(400).send({ error: "Query parameter 'key' is required." });
-      }
-
-      const response = await fetch(`${url}/authors/${authorId}.json`);
-      
-      if (!response.ok) {
-        return reply.status(response.status).send({ error: "Failed to fetch author details." });
-      }
-
-      const result: Author = await response.json();
-
-      reply.send(result);
-    } catch (err) {
-      console.error(`Error in /authorDetails route: ${err}`);
       reply.status(500).send({ error: "Internal Server Error" });
     }
   }
@@ -133,7 +107,7 @@ fastifyServer.get(
         return reply.status(404).send({ error: "Author details not found." });
       }
 
-      reply.send(result);
+      return reply.send(result);
     } catch (err) {
       console.error(`Error in /authorDetails route: ${err}`);
       reply.status(500).send({ error: "Internal Server Error" });
@@ -141,35 +115,80 @@ fastifyServer.get(
   }
 );
 
+// Search Book or Author
+fastifyServer.get(
+  "/search",
+  async (
+    req: FastifyRequest<{ Querystring: QueryWithSearchParamLimitOffsetFilter & { limit?: string; offset?: string; filter?: string } }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const { searchParam, limit, offset, filter } = req.query;
+
+      if (!searchParam) {
+        return reply.status(400).send({ error: "Query parameter 'searchParam' is required." });
+      }
+
+      if (limit && isNaN(Number(limit))) {
+        return reply.status(400).send({ error: "Query parameter 'limit' must be a valid number." });
+      }
+
+      if (offset && isNaN(Number(offset))) {
+        return reply.status(400).send({ error: "Query parameter 'offset' must be a valid number." });
+      }
+
+      if (filter && !["books", "authors"].includes(filter)) {
+        return reply.status(400).send({ error: "Query parameter 'filter' must be either 'books' or 'authors'." });
+      }
+
+      const result = await fetchSearchResults(searchParam, limit, offset, filter);
+
+      if (!result || result.length === 0) {
+        return reply.status(404).send({ error: `No results found for the given search query and filter: '${filter}'` });
+      }
+
+      reply.send(result);
+    } catch (err) {
+      console.error(`Error in /search route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
+  }
+);
+
 // Search Function
-const search = async (query: string, limit?: string, offset?: string) => {
+const fetchSearchResults = async (query: string, limit?: string, offset?: string, filter?: string) => {
   try {
-    const responseBooks = await request(`${url}/search.json?q=${query}`, { method: "GET" });
-    const responseAuthors = await request(`${url}/search/authors.json?q=${query}`, { method: "GET" });
+    let results: any[] = [];
+    console.log("------------------ filter -----------------");
+    console.log(filter);
 
-    const bookData: any = await responseBooks.body.json();
-    const authorData: any = await responseAuthors.body.json();
-
-    const combinedResults = [
-      ...bookData.docs.map((book: any) => ({
+    if (filter === "books" || !filter) {
+      const responseBooks = await request(`${url}/search.json?q=${query}`, { method: "GET" });
+      const bookData: any = await responseBooks.body.json();
+      results = bookData.docs.map((book: any) => ({
         title: book.title,
         author: book.author_name || "Unknown Author",
         key: book.key,
-        imageUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : undefined, // Add imageUrl for book
+        imageUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : undefined,
         ...book,
-      })),
-      ...authorData.docs.map((author: any) => ({
+      }));
+    }
+
+    if (filter === "authors"|| !filter) {
+      const responseAuthors = await request(`${url}/search/authors.json?q=${query}`, { method: "GET" });
+      const authorData: any = await responseAuthors.body.json();
+      results = authorData.docs.map((author: any) => ({
+        name: author.name,
+        key: author.key,
+        birth_date: author.birth_date || "Unknown",
         ...author,
-      })),
-    ];
+      }));
+    }
 
-    // Pagination logic
-    const parsedLimit = limit ? parseFloat(limit) : combinedResults.length;
-    const parsedOffset = offset ? parseFloat(offset) : 0;
+    const parsedLimit = limit ? parseInt(limit) : results.length;
+    const parsedOffset = offset ? parseInt(offset) : 0;
     const end = parsedLimit + parsedOffset;
-    const slicedResults = combinedResults.slice(parsedOffset, end);
-
-    return slicedResults;
+    return results.slice(parsedOffset, end);
   } catch (err) {
     console.error(`Error in search: ${err}`);
     throw err;
@@ -179,7 +198,7 @@ const search = async (query: string, limit?: string, offset?: string) => {
 
 
 // Fetch Book Data
-const getBook = async (id: string, type: string): Promise<Book | undefined> => {
+const fetchBook = async (id: string, type: string): Promise<Book | undefined> => {
   try {
     const response = await request(`${url}/api/books?bibkeys=${type}%3A${id}&format=json&jscmd=viewapi`, {
       method: "GET",
@@ -200,13 +219,13 @@ const getBook = async (id: string, type: string): Promise<Book | undefined> => {
       return undefined;
     }
   } catch (err) {
-    console.error(`Error in getBook: ${err}`);
+    console.error(`Error in fetchBook: ${err}`);
     throw err;
   }
 };
 
 // Fetch Book Details
-const getBookDetails = async (key: string): Promise<Book | undefined> => {
+const fetchBookDetails = async (key: string): Promise<Book | undefined> => {
   try {
     const response = await request(`${url}${key}`, { method: "GET" });
     const result: any = await response.body.json();
@@ -219,7 +238,7 @@ const getBookDetails = async (key: string): Promise<Book | undefined> => {
       return undefined;
     }
   } catch (err) {
-    console.error(`Error in getBookDetails: ${err}`);
+    console.error(`Error in fetchBookDetails: ${err}`);
     throw err;
   }
 };

@@ -3,7 +3,9 @@ export type Author = {
     name: string;
     birth_date?: string;
     death_date?: string;
-    bio?: string | { value: string };
+    bio?: string;
+    top_work?: string;
+    top_subjets?: string[];
   };
   
   export type Book = {
