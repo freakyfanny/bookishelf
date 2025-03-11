@@ -1,22 +1,30 @@
 {
-  "name": "bookishelf-backend",
+  "name": "fastify-ts-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "A Fastify server written in TypeScript against Openlibrary API",
+  "main": "dist/bookishelf-backend/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "NODE_ENV=development node server.js",
-    "prod": "NODE_ENV=production node server.js",
-    "serve": "node server.js"
+    "start": "node dist/**/server.js",
+    "build": "tsc",
+    "clean": "rimraf dist"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.0.0",
     "@fastify/cors": "^7.0.0",
     "fastify": "^3.29.5",
     "fastify-cors": "^6.0.3",
-    "undici": "^7.4.0",
-    "dotenv": "^10.0.0"
-  }
+    "undici": "^5.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "rimraf": "^5.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.5.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "keywords": []
 }
