@@ -43,7 +43,7 @@ const Header: React.FC = () => {
           <select
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
-            className="bg-slate-700 text-white px-4 py-2 rounded-md border border-gray-500 focus:border-sky-400"
+            className="bg-sky-300 text-black mx-4 px-4 py-2 rounded-md border border-gray-500 focus:border-sky-900"
           >
             <option value="books" > Books </option>
             <option value="authors" > Authors </option>
