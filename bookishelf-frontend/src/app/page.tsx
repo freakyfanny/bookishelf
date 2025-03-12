@@ -1,4 +1,4 @@
-import Books from "./components/Books";
+import Books from "../../components/Books";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
