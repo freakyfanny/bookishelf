@@ -22,9 +22,9 @@ const Books = () => {
         enabled: (searchQuery.length > 1)
     });
 
-    if (isLoading) return (
-        <LoadingSpinner />
-    );
+    if (isLoading) {
+      return <LoadingSpinner />
+    };
 
     if (isError) {
         console.error(error);
