@@ -2,7 +2,7 @@ import fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import dotenv from "dotenv";
 import { request } from "undici";
 import cors from "@fastify/cors";
-import { Author, Book } from "../shared/types"; // Import shared types
+import { Author, Book } from "../shared/types";
 
 dotenv.config();
 
@@ -161,7 +161,7 @@ const fetchSearchResults = async (query: string, limit?: string, offset?: string
     console.log("------------------ filter -----------------");
     console.log(filter);
 
-    if (filter === "books" || !filter) {
+    if (filter == "books" || !filter) {
       const responseBooks = await request(`${url}/search.json?q=${query}`, { method: "GET" });
       const bookData: any = await responseBooks.body.json();
       results = bookData.docs.map((book: any) => ({
@@ -171,9 +171,7 @@ const fetchSearchResults = async (query: string, limit?: string, offset?: string
         imageUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : undefined,
         ...book,
       }));
-    }
-
-    if (filter === "authors"|| !filter) {
+    } else if(filter == "authors") {
       const responseAuthors = await request(`${url}/search/authors.json?q=${query}`, { method: "GET" });
       const authorData: any = await responseAuthors.body.json();
       results = authorData.docs.map((author: any) => ({
