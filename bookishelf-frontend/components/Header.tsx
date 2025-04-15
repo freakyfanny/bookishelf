@@ -1,78 +1,125 @@
 'use client';
 
 import Link from "next/link";
-import { useState, useEffect } from 'react';
-import { useSearchQuery } from '../src/app/providers';
-import { useDebounce } from "../hooks/useDebounce";
+import { useState, useEffect, useRef } from 'react';
+import SkipLink from './SkipLink';
 
 const Header: React.FC = () => {
-  const [inputValue, setInputValue] = useState("");
-  const [searchFilterValue, setSearchFilterValue] = useState("");
-  const { setSearchQuery, setSearchFilter } = useSearchQuery();
-  const debouncedValue = useDebounce(inputValue, 500);
-  const debouncedFilterValue = useDebounce(searchFilterValue, 500);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const toggleMenu = () => setMenuOpen((prev) => !prev);
 
   useEffect(() => {
-    if (debouncedValue) {
-      setSearchQuery(debouncedValue);
-    }
-  }, [debouncedValue, setSearchQuery]);
+  if (!menuOpen || !navRef.current || !buttonRef.current) return;
 
-  useEffect(() => {
-    if (debouncedFilterValue) {
-      setSearchFilter(debouncedFilterValue);
-    }
-  }, [debouncedFilterValue, setSearchFilter]);
+  const element = navRef.current;
+  const removeButton = buttonRef.current;
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
+  const focusableSelectors = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  const focusableElements = element.querySelectorAll<HTMLElement>(focusableSelectors);
+  const firstFocusableElement = focusableElements[0];
+  const lastFocusableElement = focusableElements[focusableElements.length - 1];
+
+  const shutdownFocusTrap = () => {
+    setMenuOpen(false);
+    element.removeEventListener('keydown', handleKeydown);
+    removeButton.removeEventListener('click', shutdownFocusTrap);
+    removeButton.focus();
   };
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSearchFilterValue(e.target.value);
+  const handleKeydown = (event: KeyboardEvent) => {
+    const isEscPressed = event.key === 'Escape';
+    const isTabPressed = event.key === 'Tab' || event.keyCode === 9;
+
+    if (isEscPressed) {
+      shutdownFocusTrap();
+      return;
+    }
+
+    if (!isTabPressed) return;
+
+    if (event.shiftKey) {
+      if (document.activeElement === firstFocusableElement) {
+        event.preventDefault();
+        lastFocusableElement.focus();
+      }
+    } else {
+      if (document.activeElement === lastFocusableElement) {
+        event.preventDefault();
+        firstFocusableElement.focus();
+      }
+    }
   };
+
+  element.addEventListener('keydown', handleKeydown);
+  removeButton.addEventListener('click', shutdownFocusTrap);
+  firstFocusableElement?.focus();
+  document.body.style.overflowY = 'hidden';
+
+  return () => {
+    document.body.style.overflowY = 'auto';
+    element.removeEventListener('keydown', handleKeydown);
+    removeButton.removeEventListener('click', shutdownFocusTrap);
+  };
+  }, [menuOpen]);
 
   return (
-    <header className="w-full fixed top-0 z-10 text-white p-0" >
-      <nav className="flex items-center justify-between flex-wrap bg-slate-800 p-6" >
-        <div className="flex items-center flex-shrink-0 text-white mr-6" >
-          <span className="font-bold text-xl" > Bookishelf </span>
-        </div>
+    <header className="w-full fixed top-0 z-10 text-white p-0 bg-slate-800">
+      <SkipLink />
+      <div className="flex items-center justify-between p-4">
+        <Link href="/" className="flex items-center font-bold text-xl" aria-label="Bookishelf homepage">
+          Bookishelf
+        </Link>
 
-        < div className="w-full block flex-grow sm:flex sm:items-center sm:w-auto" >
-          <div className="text-sm sm:flex-grow" >
-            <Link href="/" className="block mt-4 sm:inline-block sm:mt-0 text-sky-300 hover:text-white mr-4" >
-              Bookishelf
-            </Link>
-            <Link href="/favourites" className="block mt-4 sm:inline-block sm:mt-0 text-sky-300 hover:text-white mr-4" >
-              Favourites
-            </Link>
-          </div>
-
-          <select
-            value={searchFilterValue}
-            onChange={handleFilterChange}
-            className="bg-sky-300 text-black mx-4 px-4 py-2 rounded-md border border-gray-500 focus:border-sky-900"
+        <button
+          ref={buttonRef}
+          onClick={toggleMenu}
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          className="md:hidden p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        >
+          <svg
+            className="h-6 w-6 text-white"
+            viewBox="0 0 24 24"
+            role="img"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <option value="books" > Books </option>
-            <option value="authors" > Authors </option>
-          </select>
-
-          <div className="max-w-md mx-auto group" >
-            <div className="flex items-center border-b-2 border-slate-200 group-focus-within:border-sky-500 transition-colors" >
-              <input
-                type="text"
-                value={inputValue}
-                onChange={handleSearchChange}
-                placeholder="Type to search..."
-                className="w-full px-4 py-3 focus:outline-none bg-transparent"
+            {menuOpen ? (
+              <path
+                d="M6 18L18 6M6 6l12 12"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
               />
-            </div>
-          </div>
-        </div>
-      </nav>
+            ) : (
+              <path
+                d="M4 6h16M4 12h16M4 18h16"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            )}
+          </svg>  
+        </button>
+
+        <nav
+          ref={navRef}
+          className={`${menuOpen ? 'block' : 'hidden'} sm:flex sm:items-center sm:space-x-4 absolute sm:relative top-16 sm:top-0 left-0 w-full sm:w-auto bg-slate-800 p-4 sm:p-0`}
+          aria-hidden={!menuOpen}
+          aria-label="Main navigation"
+        >
+          <ul className="flex flex-col sm:flex-row sm:space-x-4">
+            <li><Link href="/" className="text-sky-300 hover:text-white py-1">Home</Link></li>
+            <li><Link href="/favourites" className="text-sky-300 hover:text-white py-1">Favourites</Link></li>
+          </ul>
+          <label htmlFor="search-filter" className="sr-only">Search filter</label>
+        </nav>
+      </div>
     </header>
-  )
+  );
 };
 
 export default Header;

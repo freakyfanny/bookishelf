@@ -26,7 +26,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <SearchQueryContext.Provider value={{ searchQuery, setSearchQuery, searchFilter, setSearchFilter }}>
-        <div className="mt-25">{children}</div>
+        <section className="mt-15">{children}</section>
       </SearchQueryContext.Provider>
     </QueryClientProvider>
   );
