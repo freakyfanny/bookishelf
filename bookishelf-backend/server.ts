@@ -33,32 +33,6 @@ interface QueryWithSearchParamLimitOffsetFilter {
   filter: string;
 }
 
-// Fetch Books
-fastifyServer.get(
-  "/books",
-  async (req: FastifyRequest<{ Querystring: QueryWithIdType }>, reply: FastifyReply) => {
-    try {
-      const { id, type } = req.query;
-
-      if (!id || !type) {
-        return reply.status(400).send({ error: "Query parameters 'id' and 'type' are required." });
-      }
-
-      const result: Book | undefined = await fetchBook(id, type);
-
-      if (!result) {
-        return reply.status(404).send({ error: "Book not found." });
-      }
-
-      return reply.send(result);
-    } catch (err) {
-      console.error(`Error in /books route: ${err}`);
-      reply.status(500).send({ error: "Internal Server Error" });
-    }
-  }
-);
-
-
 // Fetch Book Details
 fastifyServer.get(
   "/bookDetails",
@@ -70,7 +44,7 @@ fastifyServer.get(
         return reply.status(400).send({ error: "Query parameter 'key' is required." });
       }
 
-      const result: Book | undefined = await fetchBookDetails(key);
+      const result: Book | undefined = await fetchBook(key);
 
       if (!result) {
         return reply.status(404).send({ error: "Book details not found." });
@@ -86,7 +60,7 @@ fastifyServer.get(
 
 // Fetch Author Details
 fastifyServer.get(
-  "/authorDetails",
+  "/authordetails",
   async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
     try {
       const { key: authorId } = req.query;
@@ -115,6 +89,10 @@ fastifyServer.get(
   }
 );
 
+function isValidFilter(value: string): value is "books" | "authors" {
+  return value === "books" || value === "authors";
+}
+
 // Search Book or Author
 fastifyServer.get(
   "/search",
@@ -124,6 +102,7 @@ fastifyServer.get(
   ) => {
     try {
       const { searchParam, limit, offset, filter } = req.query;
+
 
       if (!searchParam) {
         return reply.status(400).send({ error: "Query parameter 'searchParam' is required." });
@@ -141,7 +120,8 @@ fastifyServer.get(
         return reply.status(400).send({ error: "Query parameter 'filter' must be either 'books' or 'authors'." });
       }
 
-      const result = await fetchSearchResults(searchParam, limit, offset, filter);
+      const filterParam = isValidFilter(filter) ? filter : undefined;
+      const result = await fetchSearchResults(searchParam, limit, offset, filterParam);
       if (!result || result.length === 0) {
         return reply.status(404).send({ error: `No results found for the given search query and filter: '${filter}'` });
       }
@@ -153,38 +133,64 @@ fastifyServer.get(
     }
   }
 );
+type SearchResponse<T> = {
+  docs: T[];
+};
 
-// Search Function
-const fetchSearchResults = async (query: string, limit?: string, offset?: string, filter?: string) => {
+const fetchSearchResults = async (
+  query: string,
+  limit?: string,
+  offset?: string,
+  filter?: "books" | "authors"
+): Promise<(Book | Author)[]> => {
   try {
-    let results: any[] = [];
-    console.log("------------------ filter -----------------");
-    console.log(filter);
+    let results: (Book | Author)[] = [];
 
-    if (filter == "books" || !filter) {
-      const responseBooks = await request(`${url}/search.json?q=${query}`, { method: "GET" });
-      const bookData: any = await responseBooks.body.json();
-      results = bookData.docs.map((book: any) => ({
+    if (filter === "books" || !filter) {
+      const responseBooks = await request(`${url}/search.json?q=${encodeURIComponent(query)}`, {
+        method: "GET",
+      });
+
+      const bookData = (await responseBooks.body.json()) as SearchResponse<any>;
+
+      results = bookData.docs.map((book: any): Book => ({
+        type: "book",
+        slug: book.key,
         title: book.title,
-        author: book.author_name || "Unknown Author",
-        key: book.key,
-        imageUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : undefined,
-        ...book,
+        authors: book.author_name?.join(", ") || "Unknown Author",
+        cover_id: book.cover_i,
+        first_publish_year: book.first_publish_year,
+        subjects: book.subject,
+        description: book.description,
+        imageUrl: book.cover_i
+          ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
+          : undefined,
       }));
-    } else if(filter == "authors") {
-      const responseAuthors = await request(`${url}/search/authors.json?q=${query}`, { method: "GET" });
-      const authorData: any = await responseAuthors.body.json();
-      results = authorData.docs.map((author: any) => ({
+    }
+
+    if (filter === "authors") {
+      const responseAuthors = await request(`${url}/search/authors.json?q=${encodeURIComponent(query)}`, {
+        method: "GET",
+      });
+
+      const authorData = (await responseAuthors.body.json()) as SearchResponse<any>;
+
+      results = authorData.docs.map((author: any): Author => ({
+        type: "author",
+        slug: author.key,
         name: author.name,
-        key: author.key,
-        birth_date: author.birth_date || "Unknown",
-        ...author,
+        birth_date: author.birth_date,
+        death_date: author.death_date,
+        bio: author.bio,
+        top_work: author.top_work,
+        top_subjects: author.top_subjects,
       }));
     }
 
     const parsedLimit = limit ? parseInt(limit) : results.length;
     const parsedOffset = offset ? parseInt(offset) : 0;
     const end = parsedLimit + parsedOffset;
+
     return results.slice(parsedOffset, end);
   } catch (err) {
     console.error(`Error in search: ${err}`);
@@ -192,53 +198,61 @@ const fetchSearchResults = async (query: string, limit?: string, offset?: string
   }
 };
 
-
-
-// Fetch Book Data
-const fetchBook = async (id: string, type: string): Promise<Book | undefined> => {
+const fetchBook = async (key: string): Promise<Book | undefined> => {
   try {
-    const response = await request(`${url}/api/books?bibkeys=${type}%3A${id}&format=json&jscmd=viewapi`, {
-      method: "GET",
-    });
+    const requestUrl = `https://openlibrary.org/works/${key}.json`;
+    const response = await fetch(requestUrl, { method: "GET" });
 
-    const result: any = await response.body.json();
+    if (!response.ok) {
+      console.error(`Failed to fetch data for ${key}: ${response.statusText}`);
+      return undefined;
+    }
 
-    if (result && result[`${type}:${id}`]) {
-      const bookData = result[`${type}:${id}`];
+    const result: any = await response.json();
 
-      if (bookData.cover_id) {
-        bookData.imageUrl = `https://covers.openlibrary.org/b/id/${bookData.cover_id}-L.jpg`;
+    if (result) {
+      const bookData = result;
+
+      // Fetch author information
+      if (bookData.authors && bookData.authors.length > 0) {
+        const authorPromises = bookData.authors.map(async (author: any) => {
+          const authorUrl = `https://openlibrary.org/${author.author.key}.json`; // Corrected URL for author data
+          const authorResponse = await fetch(authorUrl);
+          
+          if (authorResponse.ok) {
+            const authorData = await authorResponse.json();
+            return {
+              name: authorData.name,
+              bio: authorData.bio || 'No biography available',
+              key: authorData.key,
+            };
+          } else {
+            console.error(`Failed to fetch author data for ${author.key}`);
+            return { name: author.name || 'Unknown', bio: 'No biography available', key: author.key };
+          }
+        });
+
+        // Wait for all author data to be fetched
+        const authors = await Promise.all(authorPromises);
+        bookData.authors = authors;  // Add author data to the book object
+      }
+
+      // Add cover image if available
+      if (bookData.covers && bookData.covers.length > 0) {
+        bookData.imageUrl = `https://covers.openlibrary.org/b/id/${bookData.covers[0]}-L.jpg`;
       }
 
       return bookData;
     } else {
-      console.error("Book not found or invalid data:", result);
+      console.error(`Book not found or invalid data for ${key}:`, result);
       return undefined;
     }
   } catch (err) {
-    console.error(`Error in fetchBook: ${err}`);
-    throw err;
+    console.error(`Error in fetchBook with key ${key}:`, err);
+    return undefined;
   }
 };
 
-// Fetch Book Details
-const fetchBookDetails = async (key: string): Promise<Book | undefined> => {
-  try {
-    const response = await request(`${url}${key}`, { method: "GET" });
-    const result: any = await response.body.json();
-
-    // Validate the response data
-    if (result && result.title && result.authors) {
-      return result;
-    } else {
-      console.error("Invalid book details response:", result);
-      return undefined;
-    }
-  } catch (err) {
-    console.error(`Error in fetchBookDetails: ${err}`);
-    throw err;
-  }
-};
 
 fastifyServer.listen({ port: Number(PORT) }, (err, address) => {
   if (err) {
