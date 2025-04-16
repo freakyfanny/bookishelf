@@ -4,7 +4,7 @@ interface AuthorCardProps {
     author: Author;
 }
 
-const BookCard: React.FC<AuthorCardProps> = ({ author }) => {
+const AuthorCard: React.FC<AuthorCardProps> = ({ author }) => {
     const { name, birth_date, death_date, bio, top_subjects, top_work } = author;
     return (
         <div className="flex-1 text-black text-center bg-white px-5 py-5 m-2 rounded">

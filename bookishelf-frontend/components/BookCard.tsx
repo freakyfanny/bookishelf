@@ -6,7 +6,6 @@ const slugify = (text: string) =>
   text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 const BookCard: React.FC<Book> = ({
-  type,
   slug,
   title,
   authors,
