@@ -126,7 +126,7 @@ fastifyServer.get(
         return reply.status(404).send({ error: `No results found for the given search query and filter: '${filter}'` });
       }
 
-      reply.send(result);
+      return reply.send(result);
     } catch (err) {
       console.error(`Error in /search route: ${err}`);
       reply.status(500).send({ error: "Internal Server Error" });
