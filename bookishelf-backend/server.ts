@@ -97,7 +97,7 @@ function isValidFilter(value: string): value is "books" | "authors" {
 fastifyServer.get(
   "/search",
   async (
-    req: FastifyRequest<{ Querystring: QueryWithSearchParamLimitOffsetFilter & { limit?: string; offset?: string; filter?: string } }>,
+    req: FastifyRequest<{ Querystring: QueryWithSearchParamLimitOffsetFilter }>,
     reply: FastifyReply
   ) => {
     try {
