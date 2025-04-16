@@ -16,7 +16,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Missing filter' }, { status: 400 });
     }
 
-    const serverResponse = await fetch(`http://localhost:3000/search?searchParam=${searchParam}&limit=${limit}&offset=${offset}`);
+    const serverResponse = await fetch(`http://localhost:3000/search?searchParam=${searchParam}&limit=${limit}&offset=${offset}&filter=${filter}`);
     
     if (!serverResponse.ok) {
       throw new Error('Server API error');
