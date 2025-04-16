@@ -8,8 +8,9 @@ export async function GET(req: Request) {
     if (!key) {
       return NextResponse.json({ error: 'Missing key' }, { status: 400 });
     }
+    const apiUrl = process.env.BACKEND_API_URL;
 
-    const res = await fetch(`http://localhost:3000/bookDetails?key=${key}`);
+    const res =await fetch(`${apiUrl}/bookDetails?key=${key}`);
     if (!res.ok) {
       throw new Error('Book details API failed');
     }

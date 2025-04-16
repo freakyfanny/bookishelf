@@ -4,8 +4,10 @@ import Link from "next/link";
 import { BookDetails } from "../../../../../shared/types";
 
 async function fetchBookDetails(key: string): Promise<BookDetails | null> {
-  try {
-    const res = await fetch(`http://localhost:3001/api/bookDetails?key=${key}`, {
+  try { 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+    const res =await fetch(`${apiUrl}/api/bookDetails?key=${key}`, {
       cache: 'no-store',
     });
 
