@@ -24,14 +24,12 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <div className="min-h-screen">
+      <body className={`${geistSans.variable} ${geistMono.variable} "min-h-screen`}>
           <Providers> 
             <Header />
             {children}
             <Footer />
           </Providers>
-        </div>
       </body>
     </html>
   );

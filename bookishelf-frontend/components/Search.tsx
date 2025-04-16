@@ -8,8 +8,9 @@ import { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import { useDebounce } from "../hooks/useDebounce";
 import SearchFilter from './SearchFilter';
+import { Book, Author } from '../../shared/types';
 
-const fetchResults = async (searchQuery: string, filter: string) => {
+const fetchResults = async (searchQuery: string, filter: string): Promise<(Book | Author)[]> => {
   const res = await fetch(`/api/search?searchParam=${searchQuery}&filter=${filter}`);
   if (!res.ok) {
     throw new Error('Error fetching results');
@@ -23,7 +24,7 @@ const Search = () => {
   const { searchQuery, searchFilter } = useSearchQuery();
   const { setSearchQuery, setSearchFilter } = useSearchQuery();
 
-  const { data, error, isLoading, isError } = useQuery({
+  const { data, error, isLoading, isError } = useQuery<(Book | Author)[], Error>({
     queryKey: ['results', searchQuery, searchFilter],
     queryFn: () => fetchResults(searchQuery, searchFilter),
     enabled: searchQuery.length > 1
@@ -51,12 +52,12 @@ const Search = () => {
   }
 
   const fetchedResult = Array.isArray(data) ? data : [];
-
+  console.log(fetchedResult);
   return (
     <section aria-labelledby="search-heading" className="py-4">
-      <h1 id="search-heading" className="text-2xl font-bold mb-6">
-        Search
-      </h1>
+      <h2 id="search-heading" className="text-xl font-bold mb-6">
+        Search books
+      </h2>
 
       <form role="search" className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
         <SearchFilter
@@ -78,28 +79,32 @@ const Search = () => {
           />
         </div>
       </form>
-
       {fetchedResult.length > 0 && (
         <div aria-label="Search results">
           <ul className="grid grid-cols-2 md:grid-cols-2 gap-x-10 gap-y-10">
-            {fetchedResult.map((object, index) =>
-              searchFilter === "books" ? (
-                <li key={index}>
+            {fetchedResult.map((object) => {
+              console.log('Rendering object:', object); // 👈 Console log here
+              console.log('Rendering object:', object.slug); // 👈 Console log here
+
+              return searchFilter === "books" && 'title' in object ? (
+                <li key={`${object.slug}`}>
                   <BookCard
+                    type={object.type}
+                    slug={object.slug}
                     title={object.title}
-                    description={object.description}
-                    author={object.author ? object.author.join(', ') : ""}
-                    imageUrl={object.imageUrl}
-                    category={object.subjects}
-                    publishDate={object.first_publish_year}
+                    description={typeof object.description === 'string' ? object.description : object.description?.value || ''}
+                    authors={object.authors}
+                    imageUrl={object.imageUrl || ''}
+                    subjects={object.subjects || []}
+                    first_publish_year={object.first_publish_year || 0}
                   />
                 </li>
               ) : (
-                <li key={index}>
-                  <AuthorCard author={object} />
+                <li id={object.slug}>
+                  <AuthorCard author={object as Author} />
                 </li>
-              )
-            )}
+              );
+            })}
           </ul>
         </div>
       )}

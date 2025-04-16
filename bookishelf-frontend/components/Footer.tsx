@@ -3,7 +3,7 @@ const Footer: React.FC = () => {
         <footer className="bg-slate-800 text-white py-10 mt-auto">
             <div className="container mx-auto text-center">
                 <div className="py-30">
-                    <h1 className="mt-10 text-5xl">Dont be shy. Say hi 👋</h1>
+                    <h2 className="mt-10 text-4xl">Dont be shy. Say hi 👋</h2>
                     <p className="text-2xl text-hairline py-5">Do you have a project or an idea that could use some help?<br />Lets work together</p>
                 </div>
                 <div className="flex justify-start items-start">

@@ -1,66 +1,73 @@
 import Image from "next/image";
+import Link from "next/link";
+import { Book } from "../../shared/types";
 
-interface BookCardProps {
-    title: string;
-    author: string;
-    description: string;
-    imageUrl: string;
-    category: string;
-    publishDate: number;
-}
+const slugify = (text: string) =>
+  text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-const BookCard: React.FC<BookCardProps> = ({ title, author, description, imageUrl, category, publishDate }) => {
-    return (
-        <section
-          role="link"
-          tab-index="0"
-          aria-labelledby={`book-${title}`}
-          className="bg-gray-200 border-2 border-cyan-600 rounded-md cursor-pointer p-5 text-body-light"
-        >
-          <article className="flex">
-            <figure className="self-center">
-              <Image
-                src={imageUrl}
-                width={128}
-                height={200}
-                className="rounded shadow-lg border-b border-gray-300 object-cover transition-all duration-300"
-                alt={`Book cover of ${title}`} // Descriptive alt text
-              />
-              <figcaption className="sr-only">{`Cover image for ${title}`}</figcaption>
-            </figure>
+const BookCard: React.FC<Book> = ({
+  type,
+  slug,
+  title,
+  authors,
+  description,
+  imageUrl,
+  subjects,
+  first_publish_year,
+}) => {
+  const slugTitle = slugify(title);
+  console.log("book key", slug);
+  console.log("book type", type);
+  return (
+    <section
+      role="link"
+      tabIndex={0}
+      aria-labelledby={`book-${slugTitle}`}
+      className="bg-gray-200 border-2 border-cyan-600 rounded-md cursor-pointer p-5 text-body-light"
+    > 
+      <article className="flex">
+        <figure className="self-center">
+          <Image
+            src={imageUrl || "/placeholder.png"}
+            width={128}
+            height={200}
+            className="rounded shadow-lg border-b border-gray-300 object-cover transition-all duration-300"
+            alt={`Book cover of ${title}`}
+          />
+          <figcaption className="sr-only">{`Cover image for ${title}`}</figcaption>
+        </figure>
 
-            <section className="p-8 overflow-hidden">
-              <header>
-                <h2 className="text-lg font-bold">{title}</h2> {/* Heading for the title */}
-              </header>
+        <section className="p-8 overflow-hidden">
+          <header>
+            <h2 className="text-lg font-bold">{title}</h2>
+          </header>
 
-              <p className="text-balance font-normal">by {author}</p>
-              <p className="whitespace-nowrap overflow-hidden text-ellipsis font-normal">{publishDate}</p>
-              <p className="uppercase tracking-wide text-sm text-teal-600 font-bold">{category}</p>
+          <p className="text-balance font-normal">by {authors}</p>
+          <p className="whitespace-nowrap overflow-hidden text-ellipsis font-normal">{first_publish_year}</p>
+          <p className="uppercase tracking-wide text-sm text-teal-600 font-bold">
+            {subjects?.[0] ?? "Unknown Category"}
+          </p>
+          <p className="text-sm text-black mt-2">
+            {typeof description === "string" ? description : description?.value ?? "No description"}
+          </p>
 
-              <p className="text-sm text-black mt-2">{description}</p>
-              <p className="text-sm text-black mt-2">{category}</p>
-
-              <footer className="flex flex-wrap">
-                <button
-                  type="button"
-                  aria-label={`Read more about ${title}`}
-                  className="bg-cyan-600 shadow-lg shadow-cyan-500/50 text-white text-base font-semibold py-3 px-6 rounded-md shadow-sm
-                             hover:bg-cyan-950 hover:shadow-md
-                             focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-4
-                             focus-visible:ring-white focus-visible:ring-opacity-100
-                             transition cursor-pointer"
-                >
-                  <span className="z-10">
-                    Read more
-                    <span className="sr-only"> about {title}</span>
-                  </span>
-                </button>
-              </footer>
-            </section>
-          </article>
+          <footer className="flex flex-wrap mt-4">
+            <Link
+              href={slug.replace("works/", "details/")} // key already includes "/works/..."
+              aria-label={`Read more about ${title}`}
+              className="bg-cyan-600 shadow-lg shadow-cyan-500/50 text-white text-base font-semibold py-3 px-6 rounded-md shadow-sm
+                         hover:bg-cyan-950 hover:shadow-md
+                         focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-4
+                         focus-visible:ring-white focus-visible:ring-opacity-100
+                         transition cursor-pointer"
+            >
+              Read more<span className="sr-only"> about {title}</span>
+            </Link>
+          </footer>
         </section>
-    );
+      </article>
+    </section>
+  );
 };
 
 export default BookCard;
