@@ -175,7 +175,7 @@ const fetchSearchResults = async (
 
     if (filter === "authors") {
       const responseAuthors = await request(
-        `https://openlibrary.org/search/authors.json?q=${encodeURIComponent(query)}`,
+        `https://openlibrary.org/search/authors.json?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`,
         { method: "GET" }
       );
 
