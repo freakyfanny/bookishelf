@@ -144,12 +144,17 @@ const fetchSearchResults = async (
   filter?: "books" | "authors"
 ): Promise<(Book | Author)[]> => {
   try {
+    if (!filter) {
+      throw new Error("Missing required filter: must be either 'books' or 'authors'");
+    }
+
     let results: (Book | Author)[] = [];
 
-    if (filter === "books" || !filter) {
-      const responseBooks = await request(`${url}/search.json?q=${encodeURIComponent(query)}`, {
-        method: "GET",
-      });
+    if (filter === "books") {
+      const responseBooks = await request(
+        `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}`,
+        { method: "GET" }
+      );
 
       const bookData = (await responseBooks.body.json()) as SearchResponse<any>;
 
@@ -169,9 +174,10 @@ const fetchSearchResults = async (
     }
 
     if (filter === "authors") {
-      const responseAuthors = await request(`${url}/search/authors.json?q=${encodeURIComponent(query)}`, {
-        method: "GET",
-      });
+      const responseAuthors = await request(
+        `https://openlibrary.org/search/authors.json?q=${encodeURIComponent(query)}`,
+        { method: "GET" }
+      );
 
       const authorData = (await responseAuthors.body.json()) as SearchResponse<any>;
 

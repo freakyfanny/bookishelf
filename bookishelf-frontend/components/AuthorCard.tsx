@@ -37,4 +37,4 @@ const AuthorCard: React.FC<AuthorCardProps> = ({ author }) => {
     );
 };
 
-export default BookCard;
+export default AuthorCard;
