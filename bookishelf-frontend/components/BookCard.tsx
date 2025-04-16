@@ -16,8 +16,7 @@ const BookCard: React.FC<Book> = ({
   first_publish_year,
 }) => {
   const slugTitle = slugify(title);
-  console.log("book key", slug);
-  console.log("book type", type);
+
   return (
     <section
       role="link"

@@ -21,7 +21,6 @@ type keyParams = Promise<{ key: string }>;
 
 export default async function BookDetailsPage(props: { params: keyParams }) {
   const { key } = await props.params;
-  console.log('Fetching details for key:', key);
   const data = await fetchBookDetails(key);
 
   if (!data) {

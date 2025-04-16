@@ -52,7 +52,7 @@ const Search = () => {
   }
 
   const fetchedResult = Array.isArray(data) ? data : [];
-  console.log(fetchedResult);
+
   return (
     <section aria-labelledby="search-heading" className="py-4">
       <h2 id="search-heading" className="text-xl font-bold mb-6">
@@ -83,8 +83,6 @@ const Search = () => {
         <div aria-label="Search results">
           <ul className="grid grid-cols-2 md:grid-cols-2 gap-x-10 gap-y-10">
             {fetchedResult.map((object) => {
-              console.log('Rendering object:', object); // 👈 Console log here
-              console.log('Rendering object:', object.slug); // 👈 Console log here
 
               return searchFilter === "books" && 'title' in object ? (
                 <li key={`${object.slug}`}>

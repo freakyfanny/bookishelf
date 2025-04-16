@@ -9,7 +9,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Missing key' }, { status: 400 });
     }
 
-    console.log('key inside routes bookdetails', key);
     const res = await fetch(`http://localhost:3000/bookDetails?key=${key}`);
     if (!res.ok) {
       throw new Error('Book details API failed');
