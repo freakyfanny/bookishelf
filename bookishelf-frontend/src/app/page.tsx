@@ -1,6 +1,7 @@
 import Search from "../../components/Search";
 import type { Metadata } from "next";
 import { Suspense } from 'react'
+import NewBooksSlider from '../../components/NewBooksSlider';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default function Page() {
       </h1>
       <section aria-labelledby="search-results-heading">
         <Suspense fallback={<LoadingSpinner />}>
+          <NewBooksSlider/>
           <Search />
         </Suspense>
       </section>
