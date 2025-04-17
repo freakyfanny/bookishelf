@@ -204,66 +204,118 @@ const fetchSearchResults = async (
   }
 };
 
-const fetchBook = async (key: string): Promise<Book | undefined> => {
+// Fetch new books
+fastifyServer.get(
+  "/newBooks",
+  async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const result: Book[] | undefined = await fetchNewBooks();
+
+      if (!result) {
+        return reply.status(404).send({ error: "New books not found." });
+      }
+
+      return reply.send(result);
+    } catch (err) {
+      console.error(`Error in /newBooks route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
+  }
+);
+
+const fetchNewBooks = async (): Promise<Book[] | undefined> => {
   try {
-    const requestUrl = `https://openlibrary.org/works/${key}.json`;
+    const requestUrl = `https://openlibrary.org/subjects/new.json?limit=10`;
     const response = await fetch(requestUrl, { method: "GET" });
 
     if (!response.ok) {
-      console.error(`Failed to fetch data for ${key}: ${response.statusText}`);
+      console.error(`Failed to fetch new books: ${response.statusText}`);
       return undefined;
     }
 
-    const result: any = await response.json();
+    const result = await response.json();
 
-    if (result) {
-      const bookData = result;
-
-      // Fetch author information
-      if (bookData.authors && bookData.authors.length > 0) {
-        const authorPromises = bookData.authors.map(async (author: any) => {
-          const authorUrl = `https://openlibrary.org/${author.author.key}.json`; // Corrected URL for author data
-          const authorResponse = await fetch(authorUrl);
-          
-          if (authorResponse.ok) {
-            const authorData = await authorResponse.json();
-            return {
-              name: authorData.name,
-              bio: authorData.bio || 'No biography available',
-              key: authorData.key,
-            };
-          } else {
-            console.error(`Failed to fetch author data for ${author.key}`);
-            return { name: author.name || 'Unknown', bio: 'No biography available', key: author.key };
-          }
-        });
-
-        // Wait for all author data to be fetched
-        const authors = await Promise.all(authorPromises);
-        bookData.authors = authors;  // Add author data to the book object
-      }
-
-      // Add cover image if available
-      if (bookData.covers && bookData.covers.length > 0) {
-        bookData.imageUrl = `https://covers.openlibrary.org/b/id/${bookData.covers[0]}-L.jpg`;
-      }
-
-      return bookData;
-    } else {
-      console.error(`Book not found or invalid data for ${key}:`, result);
-      return undefined;
+    if (!result.works || !Array.isArray(result.works)) {
+      console.warn("No works found in the response.");
+      return [];
     }
-  } catch (err) {
-    console.error(`Error in fetchBook with key ${key}:`, err);
+
+    const books: Book[] = result.works.map((work: any) => ({
+      key: work.key,
+      title: work.title,
+      authors: work.authors?.map((author: any) => author.name) || ["Unknown"],
+      imageUrl: work.cover_id
+        ? `https://covers.openlibrary.org/b/id/${work.cover_id}-L.jpg`
+        : undefined,
+    }));
+
+    return books;
+  } catch (error) {
+    console.error("Error fetching new books:", error);
     return undefined;
   }
 };
 
+const fetchBook = async (key: string): Promise<Book | undefined> => {
+    try {
+      const requestUrl = `https://openlibrary.org/works/${key}.json`;
+      const response = await fetch(requestUrl, { method: "GET" });
 
-fastifyServer.listen({ port: Number(PORT) }, (err, address) => {
-  if (err) {
-    fastifyServer.log.error(err);
-    process.exit(1);
-  }
-  console.log(`Server is now listening on ${address}`);
-});
+      if (!response.ok) {
+        console.error(`Failed to fetch data for ${key}: ${response.statusText}`);
+        return undefined;
+      }
+
+      const result: any = await response.json();
+
+      if (result) {
+        const bookData = result;
+
+        // Fetch author information
+        if (bookData.authors && bookData.authors.length > 0) {
+          const authorPromises = bookData.authors.map(async (author: any) => {
+            const authorUrl = `https://openlibrary.org/${author.author.key}.json`; // Corrected URL for author data
+            const authorResponse = await fetch(authorUrl);
+
+            if (authorResponse.ok) {
+              const authorData = await authorResponse.json();
+              return {
+                name: authorData.name,
+                bio: authorData.bio || 'No biography available',
+                key: authorData.key,
+              };
+            } else {
+              console.error(`Failed to fetch author data for ${author.key}`);
+              return { name: author.name || 'Unknown', bio: 'No biography available', key: author.key };
+            }
+          });
+
+          // Wait for all author data to be fetched
+          const authors = await Promise.all(authorPromises);
+          bookData.authors = authors;  // Add author data to the book object
+        }
+
+        // Add cover image if available
+        if (bookData.covers && bookData.covers.length > 0) {
+          bookData.imageUrl = `https://covers.openlibrary.org/b/id/${bookData.covers[0]}-L.jpg`;
+        }
+
+        return bookData;
+      } else {
+        console.error(`Book not found or invalid data for ${key}:`, result);
+        return undefined;
+      }
+    } catch (err) {
+      console.error(`Error in fetchBook with key ${key}:`, err);
+      return undefined;
+    }
+  };
+
+
+  fastifyServer.listen({ port: Number(PORT) }, (err, address) => {
+    if (err) {
+      fastifyServer.log.error(err);
+      process.exit(1);
+    }
+    console.log(`Server is now listening on ${address}`);
+  });
