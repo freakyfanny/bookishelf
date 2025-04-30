@@ -2,7 +2,7 @@ import fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import dotenv from "dotenv";
 import { request } from "undici";
 import cors from "@fastify/cors";
-import { Author, Book } from "../shared/types"; // Import shared types
+import { Author, Book } from "../shared/types";
 
 dotenv.config();
 
@@ -26,146 +26,296 @@ interface QueryWithKey {
   key: string;
 }
 
-interface QueryWithSearchParamLimitOffset {
+interface QueryWithSearchParamLimitOffsetFilter {
   searchParam: string;
   limit: string;
   offset: string;
+  filter: string;
 }
 
-// Fetch Books
-fastifyServer.get("/books", async (req : FastifyRequest<{Querystring: QueryWithIdType}>, reply : FastifyReply) => {
-  try {
-    const result: Book | undefined = await getBook(req.query.id as string, req.query.type as string);
-    reply.send(result);
-  } catch (err) {
-    console.error(`Error in /books route: ${err}`);
-    reply.status(500).send({ error: "Internal Server Error" });
-  }
-});
-
 // Fetch Book Details
-fastifyServer.get("/bookDetails", async (req : FastifyRequest<{Querystring: QueryWithKey}>, reply : FastifyReply) => {
-  try {
-    const result: Book | undefined = await getBookDetails(req.query.key as string);
-    reply.send(result);
-  } catch (err) {
-    console.error(`Error in /bookDetails route: ${err}`);
-    reply.status(500).send({ error: "Internal Server Error" });
+fastifyServer.get(
+  "/bookDetails",
+  async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
+    try {
+      const { key } = req.query;
+
+      if (!key) {
+        return reply.status(400).send({ error: "Query parameter 'key' is required." });
+      }
+
+      const result: Book | undefined = await fetchBook(key);
+
+      if (!result) {
+        return reply.status(404).send({ error: "Book details not found." });
+      }
+
+      return reply.send(result);
+    } catch (err) {
+      console.error(`Error in /bookDetails route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
   }
-});
+);
 
 // Fetch Author Details
-fastifyServer.get("/authorDetails", async (req : FastifyRequest<{Querystring: QueryWithKey}>, reply : FastifyReply) => {
-  try {
-    const authorId = req.query.key as string;
-    const result: Author = await fetch(`${url}/authors/${authorId}.json`).then((res) => res.json());
+fastifyServer.get(
+  "/authordetails",
+  async (req: FastifyRequest<{ Querystring: QueryWithKey }>, reply: FastifyReply) => {
+    try {
+      const { key: authorId } = req.query;
 
-    reply.send(result);
-  } catch (err) {
-    console.error(`Error in /authorDetails route: ${err}`);
-    reply.status(500).send({ error: "Internal Server Error" });
+      if (!authorId) {
+        return reply.status(400).send({ error: "Query parameter 'key' is required." });
+      }
+
+      const response = await fetch(`${url}/authors/${authorId}.json`);
+
+      if (!response.ok) {
+        return reply.status(response.status).send({ error: `Failed to fetch author details. ${response.statusText}` });
+      }
+
+      const result: Author = await response.json();
+
+      if (!result) {
+        return reply.status(404).send({ error: "Author details not found." });
+      }
+
+      return reply.send(result);
+    } catch (err) {
+      console.error(`Error in /authorDetails route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
   }
-});
+);
 
-// Search Books and Authors
-fastifyServer.get("/search", async (req : FastifyRequest<{Querystring: QueryWithSearchParamLimitOffset & {limit?: string, offset?: string}}>, reply : FastifyReply) => {
-  try {
-    const result = await search(req.query.searchParam as string, req.query.limit, req.query.offset);
-    reply.send(result);
-  } catch (err) {
-    console.error(`Error in /search route: ${err}`);
-    reply.status(500).send({ error: "Internal Server Error" });
+function isValidFilter(value: string): value is "books" | "authors" {
+  return value === "books" || value === "authors";
+}
+
+// Search Book or Author
+fastifyServer.get(
+  "/search",
+  async (
+    req: FastifyRequest<{ Querystring: QueryWithSearchParamLimitOffsetFilter }>,
+    reply: FastifyReply
+  ) => {
+    try {
+      const { searchParam, limit, offset, filter } = req.query;
+
+
+      if (!searchParam) {
+        return reply.status(400).send({ error: "Query parameter 'searchParam' is required." });
+      }
+
+      if (limit && isNaN(Number(limit))) {
+        return reply.status(400).send({ error: "Query parameter 'limit' must be a valid number." });
+      }
+
+      if (offset && isNaN(Number(offset))) {
+        return reply.status(400).send({ error: "Query parameter 'offset' must be a valid number." });
+      }
+
+      if (filter && !["books", "authors"].includes(filter)) {
+        return reply.status(400).send({ error: "Query parameter 'filter' must be either 'books' or 'authors'." });
+      }
+
+      const filterParam = isValidFilter(filter) ? filter : undefined;
+      const result = await fetchSearchResults(searchParam, limit, offset, filterParam);
+      if (!result || result.length === 0) {
+        return reply.status(404).send({ error: `No results found for the given search query and filter: '${filter}'` });
+      }
+
+      return reply.send(result);
+    } catch (err) {
+      console.error(`Error in /search route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
+    }
   }
-});
+);
+type SearchResponse<T> = {
+  docs: T[];
+};
 
-// Search Function
-const search = async (query: string, limit?: string, offset?: string) => {
+const fetchSearchResults = async (
+  query: string,
+  limit?: string,
+  offset?: string,
+  filter?: "books" | "authors"
+): Promise<(Book | Author)[]> => {
   try {
-    const responseBooks = await request(`${url}/search.json?q=${query}`, { method: "GET" });
-    const responseAuthors = await request(`${url}/search/authors.json?q=${query}`, { method: "GET" });
+    if (!filter) {
+      throw new Error("Missing required filter: must be either 'books' or 'authors'");
+    }
 
-    const bookData: any = await responseBooks.body.json();
-    const authorData: any = await responseAuthors.body.json();
+    let results: (Book | Author)[] = [];
 
-    const combinedResults = [
-      ...bookData.docs.map((book: any) => ({
+    if (filter === "books") {
+      const responseBooks = await request(
+        `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}`,
+        { method: "GET" }
+      );
+
+      const bookData = (await responseBooks.body.json()) as SearchResponse<any>;
+
+      results = bookData.docs.map((book: any): Book => ({
+        type: "book",
+        slug: book.key,
         title: book.title,
-        author: book.author_name || "Unknown Author",
-        key: book.key,
-        imageUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : undefined, // Add imageUrl for book
-        ...book,
-      })),
-      ...authorData.docs.map((author: any) => ({
-        ...author,
-      })),
-    ];
+        authors: book.author_name?.join(", ") || "Unknown Author",
+        cover_id: book.cover_i,
+        first_publish_year: book.first_publish_year,
+        subjects: book.subject,
+        description: book.description,
+        imageUrl: book.cover_i
+          ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
+          : undefined,
+      }));
+    }
 
-    // Pagination logic
-    const parsedLimit = limit ? parseFloat(limit) : combinedResults.length;
-    const parsedOffset = offset ? parseFloat(offset) : 0;
+    if (filter === "authors") {
+      const responseAuthors = await request(
+        `https://openlibrary.org/search/authors.json?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`,
+        { method: "GET" }
+      );
+
+      const authorData = (await responseAuthors.body.json()) as SearchResponse<any>;
+
+      results = authorData.docs.map((author: any): Author => ({
+        type: "author",
+        slug: author.key,
+        name: author.name,
+        birth_date: author.birth_date,
+        death_date: author.death_date,
+        bio: author.bio,
+        top_work: author.top_work,
+        top_subjects: author.top_subjects,
+      }));
+    }
+
+    const parsedLimit = limit ? parseInt(limit) : results.length;
+    const parsedOffset = offset ? parseInt(offset) : 0;
     const end = parsedLimit + parsedOffset;
-    const slicedResults = combinedResults.slice(parsedOffset, end);
 
-    return slicedResults;
+    return results.slice(parsedOffset, end);
   } catch (err) {
     console.error(`Error in search: ${err}`);
     throw err;
   }
 };
 
+// Fetch new books
+fastifyServer.get(
+  "/newBooks",
+  async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const result: Book[] | undefined = await fetchNewBooks();
 
-
-// Fetch Book Data
-const getBook = async (id: string, type: string): Promise<Book | undefined> => {
-  try {
-    const response = await request(`${url}/api/books?bibkeys=${type}%3A${id}&format=json&jscmd=viewapi`, {
-      method: "GET",
-    });
-
-    const result: any = await response.body.json();
-
-    if (result && result[`${type}:${id}`]) {
-      const bookData = result[`${type}:${id}`];
-
-      if (bookData.cover_id) {
-        bookData.imageUrl = `https://covers.openlibrary.org/b/id/${bookData.cover_id}-L.jpg`;
+      if (!result) {
+        return reply.status(404).send({ error: "New books not found." });
       }
 
-      return bookData;
-    } else {
-      console.error("Book not found or invalid data:", result);
-      return undefined;
+      return reply.send(result);
+    } catch (err) {
+      console.error(`Error in /newBooks route: ${err}`);
+      reply.status(500).send({ error: "Internal Server Error" });
     }
-  } catch (err) {
-    console.error(`Error in getBook: ${err}`);
-    throw err;
   }
-};
+);
 
-
-// Fetch Book Details
-const getBookDetails = async (key: string): Promise<Book | undefined> => {
+const fetchNewBooks = async (): Promise<Book[] | undefined> => {
   try {
-    const response = await request(`${url}${key}`, { method: "GET" });
-    const result: any = await response.body.json();
+    const requestUrl = `https://openlibrary.org/subjects/new.json?limit=10`;
+    const response = await fetch(requestUrl, { method: "GET" });
 
-    // Validate the response data
-    if (result && result.title && result.authors) {
-      return result;
-    } else {
-      console.error("Invalid book details response:", result);
+    if (!response.ok) {
+      console.error(`Failed to fetch new books: ${response.statusText}`);
       return undefined;
     }
-  } catch (err) {
-    console.error(`Error in getBookDetails: ${err}`);
-    throw err;
+
+    const result = await response.json();
+
+    if (!result.works || !Array.isArray(result.works)) {
+      console.warn("No works found in the response.");
+      return [];
+    }
+
+    const books: Book[] = result.works.map((work: any) => ({
+      key: work.key,
+      title: work.title,
+      authors: work.authors?.map((author: any) => author.name) || ["Unknown"],
+      imageUrl: work.cover_id
+        ? `https://covers.openlibrary.org/b/id/${work.cover_id}-L.jpg`
+        : undefined,
+    }));
+
+    return books;
+  } catch (error) {
+    console.error("Error fetching new books:", error);
+    return undefined;
   }
 };
 
-fastifyServer.listen({ port: Number(PORT) }, (err, address) => {
-  if (err) {
-    fastifyServer.log.error(err);
-    process.exit(1);
-  }
-  console.log(`Server is now listening on ${address}`);
-});
+const fetchBook = async (key: string): Promise<Book | undefined> => {
+    try {
+      const requestUrl = `https://openlibrary.org/works/${key}.json`;
+      const response = await fetch(requestUrl, { method: "GET" });
+
+      if (!response.ok) {
+        console.error(`Failed to fetch data for ${key}: ${response.statusText}`);
+        return undefined;
+      }
+
+      const result: any = await response.json();
+
+      if (result) {
+        const bookData = result;
+
+        // Fetch author information
+        if (bookData.authors && bookData.authors.length > 0) {
+          const authorPromises = bookData.authors.map(async (author: any) => {
+            const authorUrl = `https://openlibrary.org/${author.author.key}.json`; // Corrected URL for author data
+            const authorResponse = await fetch(authorUrl);
+
+            if (authorResponse.ok) {
+              const authorData = await authorResponse.json();
+              return {
+                name: authorData.name,
+                bio: authorData.bio || 'No biography available',
+                key: authorData.key,
+              };
+            } else {
+              console.error(`Failed to fetch author data for ${author.key}`);
+              return { name: author.name || 'Unknown', bio: 'No biography available', key: author.key };
+            }
+          });
+
+          // Wait for all author data to be fetched
+          const authors = await Promise.all(authorPromises);
+          bookData.authors = authors;  // Add author data to the book object
+        }
+
+        // Add cover image if available
+        if (bookData.covers && bookData.covers.length > 0) {
+          bookData.imageUrl = `https://covers.openlibrary.org/b/id/${bookData.covers[0]}-L.jpg`;
+        }
+
+        return bookData;
+      } else {
+        console.error(`Book not found or invalid data for ${key}:`, result);
+        return undefined;
+      }
+    } catch (err) {
+      console.error(`Error in fetchBook with key ${key}:`, err);
+      return undefined;
+    }
+  };
+
+
+  fastifyServer.listen({ port: Number(PORT) }, (err, address) => {
+    if (err) {
+      fastifyServer.log.error(err);
+      process.exit(1);
+    }
+    console.log(`Server is now listening on ${address}`);
+  });

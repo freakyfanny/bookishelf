@@ -1,8 +1,8 @@
 'use client';
 
 import { Geist, Geist_Mono } from "next/font/google";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import Providers from "./providers";
 import React from 'react';
 import "./globals.css";
@@ -24,14 +24,12 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <div className="min-h-screen">
+      <body className={`${geistSans.variable} ${geistMono.variable} "min-h-screen`}>
           <Providers> 
             <Header />
             {children}
             <Footer />
           </Providers>
-        </div>
       </body>
     </html>
   );
