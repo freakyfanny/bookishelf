@@ -48,16 +48,15 @@ const BookCard: React.FC<Book> = ({
           <p className="text-sm text-black mt-2">
             {typeof description === "string" ? description : description?.value ?? "No description"}
           </p>
-
           <footer className="flex flex-wrap mt-4">
             <Link
-              href={slug.replace("works/", "details/")} // key already includes "/works/..."
-              aria-label={`Read more about ${title}`}
+              href={slug?.includes("works/") ? slug.replace("works/", "details/") : "/"}
+              aria-label={`Read more about ${title}`} 
               className="bg-cyan-600 shadow-lg shadow-cyan-500/50 text-white text-base font-semibold py-3 px-6 rounded-md shadow-sm
-                         hover:bg-cyan-950 hover:shadow-md
-                         focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-4
-                         focus-visible:ring-white focus-visible:ring-opacity-100
-                         transition cursor-pointer"
+                        hover:bg-cyan-950 hover:shadow-md
+                        focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-4
+                        focus-visible:ring-white focus-visible:ring-opacity-100
+                        transition cursor-pointer"
             >
               Read more<span className="sr-only"> about {title}</span>
             </Link>

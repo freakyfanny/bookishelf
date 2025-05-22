@@ -3,6 +3,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .focus-style {
+    @apply cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    --tw-ring-color: #3b82f6; 
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

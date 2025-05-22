@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const apiUrl = process.env.BACKEND_API_URL;
+    console.log(`${apiUrl}/newBooks`);
 
     const res = await fetch(`${apiUrl}/newBooks`);
     if (!res.ok) {

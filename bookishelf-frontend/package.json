@@ -16,6 +16,7 @@
     "@tanstack/react-query": "^5.67.1",
     "@tanstack/react-query-devtools": "^5.67.1",
     "autoprefixer": "^10.4.20",
+    "focus-trap-react": "^11.0.3",
     "headlessui": "^0.0.0",
     "next": "^15.3.0",
     "postcss": "^8.5.3",

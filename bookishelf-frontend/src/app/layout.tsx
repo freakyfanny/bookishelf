@@ -1,5 +1,3 @@
-'use client';
-
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -28,8 +26,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <Providers> 
             <Header />
             {children}
-            <Footer />
           </Providers>
+          <Footer />
       </body>
     </html>
   );

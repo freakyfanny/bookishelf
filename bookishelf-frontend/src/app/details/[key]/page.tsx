@@ -76,6 +76,7 @@ export default async function BookDetailsPage(props: { params: keyParams }) {
 
   const authorBioUrl = author?.bio ? author.bio.match(/http[^\s]+/)?.[0] : null;
 
+  console.log(description.value);
   const { text: cleanDescription, links: descriptionLinks } = extractLinks(description.value);
 
   const { text: cleanAuthorBio, links: authorLinks } = extractLinks(author?.bio || "");

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from 'react'
 import NewBooksSlider from '../../components/NewBooksSlider';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { Heading } from "../../components/Heading";
 
 export const metadata: Metadata = {
   title: "Bookishelf",
@@ -12,13 +13,13 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <main id="maincontent" className="p-5 mb-20 min-h-screen" role="main" tabIndex={-1}>
-      <h1 className="text-2xl font-bold" id="search-results-heading">
-        Welcome to Bookishelf, here you can search on books.
-      </h1>
+      <Heading level={1} id="search-results-heading" autoFocus>
+        Bookishelf
+      </Heading>
       <section aria-labelledby="search-results-heading">
         <Suspense fallback={<LoadingSpinner />}>
-          <NewBooksSlider/>
           <Search />
+          <NewBooksSlider/>
         </Suspense>
       </section>
     </main>

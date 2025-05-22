@@ -1,5 +1,3 @@
-'use client';
-
 const LoadingSpinner: React.FC = () => {
     return (
         <div className="flex flex-col items-center">

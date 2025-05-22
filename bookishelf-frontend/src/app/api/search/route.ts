@@ -17,6 +17,7 @@ export async function GET(req: Request) {
     }
 
     const apiUrl = process.env.BACKEND_API_URL;
+console.log('kadadaw');
     const serverResponse = await fetch(`${apiUrl}/search?searchParam=${searchParam}&limit=${limit}&offset=${offset}&filter=${filter}`);
 
     if (!serverResponse.ok) {
