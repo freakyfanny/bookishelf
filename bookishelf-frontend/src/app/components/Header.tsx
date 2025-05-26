@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchQuery } from '../providers'; // If you need the context for other purposes
+import { useSearchQuery } from '../providers'; 
 
 const Header: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
-  const { setSearchQuery } = useSearchQuery(); // Keep this if you need to update the context value
+  const { setSearchQuery } = useSearchQuery(); 
 
   // Debounced search function
   const debouncedSearch = useCallback(
     (query: string) => {
-      setSearchQuery(query); // Update the search query in context
+      setSearchQuery(query);
     },
     [setSearchQuery]
   );
@@ -22,7 +22,7 @@ const Header: React.FC = () => {
       debouncedSearch(inputValue);
     }, 1000);
 
-    return () => clearTimeout(timeoutId); // Clear the timeout on input change
+    return () => clearTimeout(timeoutId);
   }, [inputValue, debouncedSearch]);
 
   // Handle input change
