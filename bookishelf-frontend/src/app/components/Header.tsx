@@ -8,7 +8,6 @@ const Header: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const { setSearchQuery } = useSearchQuery(); 
 
-  // Debounced search function
   const debouncedSearch = useCallback(
     (query: string) => {
       setSearchQuery(query);
@@ -16,7 +15,6 @@ const Header: React.FC = () => {
     [setSearchQuery]
   );
 
-  // Debounce effect
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       debouncedSearch(inputValue);
@@ -25,7 +23,6 @@ const Header: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [inputValue, debouncedSearch]);
 
-  // Handle input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
