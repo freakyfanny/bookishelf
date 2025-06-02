@@ -42,11 +42,11 @@ export const Heading = forwardRef<HTMLHeadingElement, HeadingProps>(
 
     const hiddenClass = visuallyHidden ? 'sr-only' : '';
 
-    const baseClasses = 'font-semibold text-[var(--color-textDefault)]';
+    const baseClasses = 'font-semibold';
 
     const sizeClasses = {
       1: 'text-3xl mt-4',
-      2: 'text-xl mb-4 text-[var(--color-textSubtle)]',
+      2: 'text-xl mb-4',
       3: 'text-lg my-2',
       4: 'text-md my-2',
       5: 'text-sm my-2',
